@@ -15,7 +15,7 @@
 	url = git://github.com/google/benchmark.git
 [submodule "modules/mavlink"]
 	path = modules/mavlink
-	url = git://github.com/ArduPilot/mavlink
+	url = https://github.com/Zomato/TE_MAVLink.git
 [submodule "gtest"]
 	path = modules/gtest
 	url = git://github.com/ArduPilot/googletest
