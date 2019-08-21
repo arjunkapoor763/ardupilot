@@ -178,4 +178,9 @@ private:
     bool            _boundary_create_attempted = false; // true if we have attempted to create the boundary array
     bool            _boundary_loaded = false;       // true if boundary array has been loaded from eeprom
     bool            _boundary_valid = false;        // true if boundary forms a closed polygon
+
+    //Zomato
+/*we are making RFMService class as friend class here
+ * so that RFMservice can access its private member _total and _boundary_loaded*/
+ friend class RFMService;
 };

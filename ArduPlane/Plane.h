@@ -97,6 +97,7 @@
 #include <AP_ICEngine/AP_ICEngine.h>
 #include <AP_Gripper/AP_Gripper.h>
 #include <AP_Landing/AP_Landing.h>
+#include <RFMService/RFMService.h> //Rfm library included
 
 #include "GCS_Mavlink.h"
 #include "GCS_Plane.h"
@@ -664,6 +665,9 @@ private:
         // The amount of time we should stay in a loiter for the Loiter Time command.  Milliseconds.
         uint32_t time_max_ms;
     } loiter;
+
+    //Zomato
+    RFMService rfm;
 
 
     // Conditional command
