@@ -1064,6 +1064,14 @@ struct PACKED log_DSTL {
     float D;
 };
 
+struct PACKED log_rfm_time_bound{
+	LOG_PACKET_HEADER;
+	double current;
+	double start;
+	double end;
+	uint8_t result;
+};
+
 // #endif // SBP_HW_LOGGING
 
 // FMT messages define all message formats other than FMT
@@ -1422,8 +1430,11 @@ Format characters in the format string for binary log messages
     { LOG_MSG_SBPEVENT, sizeof(log_SbpEvent), \
       "SBRE", "QHIiBB", "TimeUS,GWk,GMS,ns_residual,level,quality", "s?????", "F?????" }
 // #endif
+#define LOG_ZOM_STRUCTURES\
+	{ LOG_RFM_TIME_MSG, sizeof(log_rfm_time_bound), \
+	  "RFMT", "dddB", "curr,start,end,result", "----", "----" }
 
-#define LOG_COMMON_STRUCTURES LOG_BASE_STRUCTURES, LOG_EXTRA_STRUCTURES, LOG_SBP_STRUCTURES
+#define LOG_COMMON_STRUCTURES LOG_BASE_STRUCTURES, LOG_EXTRA_STRUCTURES, LOG_SBP_STRUCTURES, LOG_ZOM_STRUCTURES
 
 // message types 0 to 63 reserved for vehicle specific use
 
@@ -1560,6 +1571,7 @@ enum LogMessages : uint8_t {
     LOG_ISBD_MSG,
     LOG_ASP2_MSG,
     LOG_PERFORMANCE_MSG,
+	LOG_RFM_TIME_MSG,
     _LOG_LAST_MSG_
 };
 

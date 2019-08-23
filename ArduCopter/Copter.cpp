@@ -30,6 +30,10 @@ Copter::Copter(void)
     scaleLongDown(1),
     simple_cos_yaw(1.0f),
     super_simple_cos_yaw(1.0),
+	takeoff_ack(false),
+	land_ack(false),
+    internal_id_ack(false),
+	res_time_veri(false),
     land_accel_ef_filter(LAND_DETECTOR_ACCEL_LPF_CUTOFF),
     rc_throttle_control_in_filter(1.0f),
     inertial_nav(ahrs),
@@ -40,5 +44,6 @@ Copter::Copter(void)
     sensor_health.baro = true;
     sensor_health.compass = true;
 }
+
 
 Copter copter;

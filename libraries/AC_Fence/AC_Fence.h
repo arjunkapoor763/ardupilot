@@ -13,6 +13,7 @@
 #define AC_FENCE_TYPE_ALT_MAX                       1       // high alt fence which usually initiates an RTL
 #define AC_FENCE_TYPE_CIRCLE                        2       // circular horizontal fence (usually initiates an RTL)
 #define AC_FENCE_TYPE_POLYGON                       4       // polygon horizontal fence
+#define AC_FENCE_TYPE_CIRCLE_POLYGON                6       // this is custom fence for circle and polygon
 
 // valid actions should a fence be breached
 #define AC_FENCE_ACTION_REPORT_ONLY                 0       // report to GCS that boundary has been breached but take no further action
@@ -178,4 +179,11 @@ private:
     bool            _boundary_create_attempted = false; // true if we have attempted to create the boundary array
     bool            _boundary_loaded = false;       // true if boundary array has been loaded from eeprom
     bool            _boundary_valid = false;        // true if boundary forms a closed polygon
+
+    /* making RFMService as friend class so that we can set _total and _boundary_loaded
+     * total will set already existing polygon fence code to number of polygon points we feed in from
+     * PA and boundary_loaded helps to reload fence from eeprom if false.
+     */
+    friend class RFMService;
+
 };

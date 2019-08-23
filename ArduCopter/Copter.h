@@ -83,6 +83,7 @@
 #include <AP_Arming/AP_Arming.h>
 #include <AP_SmartRTL/AP_SmartRTL.h>
 #include <AP_TempCalibration/AP_TempCalibration.h>
+#include <RFMService/RFMService.h>     				//Library for RFMService for NPNT
 
 // Configuration
 #include "defines.h"
@@ -527,6 +528,19 @@ private:
     AC_Fence fence{ahrs};
 #endif
 
+    //RFMService instance
+    RFMService rfm;
+
+    //global variables to be used Zomato
+    //this is takeoff acknowledgement
+     bool takeoff_ack;
+    //this is Land acknowledgement
+     bool land_ack;
+     //this is internal id acknowledgement
+     bool internal_id_ack;
+
+     bool res_time_veri;
+
 #if AC_AVOID_ENABLED == ENABLED
 # if BEACON_ENABLED == ENABLED
     AC_Avoid avoid{ahrs, fence, g2.proximity, &g2.beacon};
@@ -938,6 +952,14 @@ private:
     void userhook_MediumLoop();
     void userhook_SlowLoop();
     void userhook_SuperSlowLoop();
+
+    //zomato.cpp
+    void rfm_NPNT_restrictions();
+    void send_internal_id(mavlink_channel_t chan);
+    void send_log_geofence_breach(mavlink_channel_t chan);
+    void send_log_takeoff(mavlink_channel_t chan);
+    void send_log_land(mavlink_channel_t chan);
+    void send_time_breach(mavlink_channel_t chan);
 
 #include "mode.h"
 

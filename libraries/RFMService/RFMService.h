@@ -66,7 +66,7 @@ public:
 	bool get_internal_id(char uin[40]);
 
 
-	void handle_pa_geofence_points(mavlink_channel_t chan, mavlink_message_t *msg, AC_Fence &fence);
+	void handle_pa_geofence_points(GCS_MAVLINK &link, mavlink_message_t *msg, AC_Fence &fence);
 
 	//data-member
 	double curr_time_gps;
