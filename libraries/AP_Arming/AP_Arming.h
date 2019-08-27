@@ -32,6 +32,7 @@ public:
         ARMING_CHECK_SWITCH     = 0x0800,
         ARMING_CHECK_GPS_CONFIG = 0x1000,
         ARMING_CHECK_SYSTEM     = 0x2000,
+		ARMING_CHECK_NPNT		= 0x4000,
     };
 
     enum ArmingMethod {
