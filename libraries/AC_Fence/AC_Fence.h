@@ -34,7 +34,13 @@
 class AC_Fence
 {
 public:
-    AC_Fence(const AP_AHRS_NavEKF &ahrs);
+    /* making RFMService as friend class so that we can set _total and _boundary_loaded
+     * total will set already existing polygon fence code to number of polygon points we feed in from
+     * PA and boundary_loaded helps to reload fence from eeprom if false.
+     */
+    friend class RFMService;
+
+	AC_Fence(const AP_AHRS_NavEKF &ahrs);
 
     /* Do not allow copies */
     AC_Fence(const AC_Fence &other) = delete;
@@ -179,11 +185,5 @@ private:
     bool            _boundary_create_attempted = false; // true if we have attempted to create the boundary array
     bool            _boundary_loaded = false;       // true if boundary array has been loaded from eeprom
     bool            _boundary_valid = false;        // true if boundary forms a closed polygon
-
-    /* making RFMService as friend class so that we can set _total and _boundary_loaded
-     * total will set already existing polygon fence code to number of polygon points we feed in from
-     * PA and boundary_loaded helps to reload fence from eeprom if false.
-     */
-    friend class RFMService;
 
 };

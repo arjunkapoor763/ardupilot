@@ -489,7 +489,12 @@ void AC_Fence::handle_msg(GCS_MAVLINK &link, mavlink_message_t* msg)
         }
 
         // send a fence point to GCS
-        case MAVLINK_MSG_ID_FENCE_FETCH_POINT: {
+        case MAVLINK_MSG_ID_FENCE_FETCH_POINT:
+        {
+//			_total.set_and_save(6); //setting the total points to what is coming from sbce packet.
+//			_enabled.set_and_save(1);
+//			_enabled_fences.set_and_save(AC_FENCE_TYPE_CIRCLE_POLYGON);
+//			_action.set_and_save(0);
             mavlink_fence_fetch_point_t packet;
             mavlink_msg_fence_fetch_point_decode(msg, &packet);
             // attempt to retrieve from eeprom

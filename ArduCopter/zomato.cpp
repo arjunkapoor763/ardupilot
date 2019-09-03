@@ -14,10 +14,42 @@
  */
 void Copter::rfm_NPNT_restrictions()
 {
+	/***************TEMPORARY*****************/
+//	static uint8_t lclc_count=0;
+//	if(lclc_count++>200)
+//	{
+//		static bool temp_lcl=false;
+//		static uint8_t c=0;
+//		if(!temp_lcl)
+//		{
+//			gcs().send_text(MAV_SEVERITY_WARNING,"call+");
+//			c=rfm.save_hardcode_gf(1,12.934158,77.609316,fence);
+//			c=rfm.save_hardcode_gf(2,12.934796,77.609852,fence);
+//			c=rfm.save_hardcode_gf(3,12.934183,77.610646,fence);
+//			c=rfm.save_hardcode_gf(4,12.933551,77.610100,fence);
+//			c=rfm.save_hardcode_gf(5,12.934158,77.609316,fence);
+//
+//			if(c==2)
+//			{
+//				temp_lcl =true;
+//			}
+//
+//		}
+//		if(g2.land_alt_low == 10)
+//		{
+//			lclc_count=0;
+//			temp_lcl=false;
+//			c=0;
+//		}
+//	}
+//	rfm.sbc_alive=true; //temp remove it
+//	rfm.sbc_alive_control=true;
+
+
 	/*****************************Time Verification*****************************/
 
 	//local counter used for controlling the sbc_alive variable values.
-    static uint8_t lcl_count=0;
+	static uint8_t lcl_count=0;
 
 	//this is controlling the sbc_alive variable turning it false on receiving
 	if(rfm.sbc_alive_control)
@@ -44,18 +76,18 @@ void Copter::rfm_NPNT_restrictions()
 	//hold for 300ms so that the background variable gets updated.
 	if(temp++ > 3)
 	{
-  	  temp = 0;
- 	  res_time_veri=rfm.get_datetime_restriction();
+		temp = 0;
+		res_time_veri=rfm.get_datetime_restriction();
 	}
 
 	//this is the packet which is logging date time required fields.
 	struct log_rfm_time_bound pkt =
 	{
-		LOG_PACKET_HEADER_INIT(LOG_RFM_TIME_MSG),
-		current		 : rfm.curr_time_gps,
-		start   	 : rfm.dt.start_time,
-		end     	 : rfm.dt.end_time,
-		result       : res_time_veri,
+			LOG_PACKET_HEADER_INIT(LOG_RFM_TIME_MSG),
+			current		 : rfm.curr_time_gps,
+			start   	 : rfm.dt.start_time,
+			end     	 : rfm.dt.end_time,
+			result       : res_time_veri,
 	};
 	//writing a packet of time onto logs.
 	DataFlash.WriteBlock(&pkt, sizeof(pkt));
@@ -70,7 +102,7 @@ void Copter::send_internal_id(mavlink_channel_t chan)
 	//sanity check whether sbc is responsing or not
 	if(!rfm.sbc_alive)
 	{
-			return;
+		return;
 	}
 	//sanity check if we have already sent internal_id and recieved internal_id_ack, return
 	if(!internal_id_ack)
@@ -113,18 +145,18 @@ void Copter::send_log_geofence_breach(mavlink_channel_t chan)
 	if(timeCount++ >=10) //for sending @1hz as its MAVLink stream is being set at @10hz already.
 	{
 		if((geo_breach & AC_FENCE_TYPE_POLYGON) || (geo_breach & AC_FENCE_TYPE_CIRCLE_POLYGON))
+		{
+			if(breach_started == false)
 			{
-				if(breach_started == false)
-				{
-					start_breach_time=(hal.util->get_hw_rtc()/1000);
-					breach_started = true;
-				}
-				breach_lat=current_loc.lat;
-				breach_lng=current_loc.lng;
-				geo_fence_breach_alt=(loc.alt/100.0f);
-				mavlink_msg_pa_geofence_breach_log_send(chan,breach_lat,breach_lng,start_breach_time,end_breach_time,geo_fence_breach_alt);
-
+				start_breach_time=(hal.util->get_hw_rtc()/1000);
+				breach_started = true;
 			}
+			breach_lat=current_loc.lat;
+			breach_lng=current_loc.lng;
+			geo_fence_breach_alt=(loc.alt/100.0f);
+			mavlink_msg_pa_geofence_breach_log_send(chan,breach_lat,breach_lng,start_breach_time,end_breach_time,geo_fence_breach_alt);
+
+		}
 		else
 		{
 			if(breach_started == true)

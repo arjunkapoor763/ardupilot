@@ -21,6 +21,7 @@
 #include <GCS_MAVLink/GCS.h>
 #include <AC_Fence/AC_Fence.h>
 #include <AP_InertialNav/AP_InertialNav.h>
+#include <DataFlash/DataFlash.h>
 
 //for time boundaries
 #define TYPE_BITS(type) (sizeof (type)* CHAR_BIT)
@@ -64,7 +65,9 @@ public:
 	double diff_time(time_t time1, time_t time0);
 	bool get_datetime_restriction();
 	bool get_internal_id(char uin[40]);
-
+	//temp
+	uint8_t save_hardcode_gf(uint8_t id,float lat,float lng,AC_Fence &fence);
+//	void save_coming_points(float lat, float lng);
 
 	void handle_pa_geofence_points(GCS_MAVLINK &link, mavlink_message_t *msg, AC_Fence &fence);
 
@@ -76,6 +79,8 @@ public:
 	bool sbc_alive;
 	bool sbc_alive_control;
 	bool sbc_ready_to_send_PA;
+
+	bool temp_lcl;
 };
 
 #endif /* LIBRARIES_RFMSERVICE_RFMSERVICE_H_ */

@@ -155,6 +155,7 @@ public:
     void Log_Write(const char *name, const char *labels, const char *units, const char *mults, const char *fmt, ...);
     void Log_WriteV(const char *name, const char *labels, const char *units, const char *mults, const char *fmt, va_list arg_list);
 
+    void save_coming_points(float lat,float lng);
     // This structure provides information on the internal member data of a PID for logging purposes
     struct PID_Info {
         float desired;

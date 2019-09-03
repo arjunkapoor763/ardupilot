@@ -1064,12 +1064,19 @@ struct PACKED log_DSTL {
     float D;
 };
 
+//Zomato code change
 struct PACKED log_rfm_time_bound{
 	LOG_PACKET_HEADER;
 	double current;
 	double start;
 	double end;
 	uint8_t result;
+};
+
+struct PACKED log_temp{
+	LOG_PACKET_HEADER;
+	float lat;
+	float lng;
 };
 
 // #endif // SBP_HW_LOGGING
@@ -1432,7 +1439,9 @@ Format characters in the format string for binary log messages
 // #endif
 #define LOG_ZOM_STRUCTURES\
 	{ LOG_RFM_TIME_MSG, sizeof(log_rfm_time_bound), \
-	  "RFMT", "dddB", "curr,start,end,result", "----", "----" }
+	  "RFMT", "dddB", "curr,start,end,result", "----", "----" },\
+	{ LOG_TEMP_MSG, sizeof(log_temp), \
+	  "Temp", "ff", "lat,lng", "----", "----" }
 
 #define LOG_COMMON_STRUCTURES LOG_BASE_STRUCTURES, LOG_EXTRA_STRUCTURES, LOG_SBP_STRUCTURES, LOG_ZOM_STRUCTURES
 
@@ -1572,6 +1581,7 @@ enum LogMessages : uint8_t {
     LOG_ASP2_MSG,
     LOG_PERFORMANCE_MSG,
 	LOG_RFM_TIME_MSG,
+	LOG_TEMP_MSG,
     _LOG_LAST_MSG_
 };
 

@@ -361,6 +361,10 @@ void Copter::ten_hz_logging_loop()
 #if FRAME_CONFIG == HELI_FRAME
     Log_Write_Heli();
 #endif
+
+    //zomato code change
+    //calling npnt time restriciton at 10hz
+    rfm_NPNT_restrictions();
 }
 
 // twentyfive_hz_logging - should be run at 25hz

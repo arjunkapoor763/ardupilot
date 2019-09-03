@@ -1420,10 +1420,10 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
 
 #if AC_FENCE == ENABLED
 		// send or receive fence points with GCS
-		//    case MAVLINK_MSG_ID_FENCE_POINT:            // MAV ID: 160
-		//    case MAVLINK_MSG_ID_FENCE_FETCH_POINT:
-		//        copter.fence.handle_msg(*this, msg);
-		//        break;
+		//case MAVLINK_MSG_ID_FENCE_POINT:            // MAV ID: 160
+		//	case MAVLINK_MSG_ID_FENCE_FETCH_POINT:
+		//		copter.fence.handle_msg(*this, msg);
+		//		break;
 		//this is custom receiving and sending of polygon fence point coming fropm sbc
 	case MAVLINK_MSG_ID_FENCE_FETCH_POINT:
 	case MAVLINK_MSG_ID_PA_GEOFENCE:
@@ -1482,30 +1482,24 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
 		mavlink_msg_message_ack_decode(msg,&packet);
 
 		//ack received from Takeoff packet!
-		if(packet.Message_Id == MAVLINK_MSG_ID_PA_TAKEOFF_LOG)
+		if(packet.Message_Id == MAVLINK_MSG_ID_PA_TAKEOFF_LOG && packet.result == MAV_RESULT_ACCEPTED)
 		{
-			if(packet.result == MAV_RESULT_ACCEPTED)
-			{
-				copter.takeoff_ack=false;
-			}
+			gcs().send_text(MAV_SEVERITY_CRITICAL,"Takeoff Recieved");
+			copter.takeoff_ack=false;
 			break;
 		}
 		//ack received from Land packet!
-		if(packet.Message_Id == MAVLINK_MSG_ID_PA_LAND_LOG)
+		if(packet.Message_Id == MAVLINK_MSG_ID_PA_LAND_LOG&&packet.result == MAV_RESULT_ACCEPTED)
 		{
-			if(packet.result == MAV_RESULT_ACCEPTED)
-			{
-				copter.land_ack=false;
-			}
+			gcs().send_text(MAV_SEVERITY_CRITICAL,"LAND Recieved");
+			copter.land_ack=false;
 			break;
 		}
 		//ack received from UIN packet!
-		if(packet.Message_Id == MAVLINK_MSG_ID_INTERNAL_ID)
+		if(packet.Message_Id == MAVLINK_MSG_ID_INTERNAL_ID &&packet.result == MAV_RESULT_ACCEPTED)
 		{
-			if(packet.result == MAV_RESULT_ACCEPTED)
-			{
-				copter.internal_id_ack=false;
-			}
+			gcs().send_text(MAV_SEVERITY_CRITICAL,"INTERNALID Recieved");
+			copter.internal_id_ack=false;
 			break;
 		}
 
@@ -1520,6 +1514,7 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
 		copter.rfm.sbc_hb.PA_verification_status=packet.PA_verification_status;
 		copter.rfm.sbc_hb.PA_sent_to_fc_status=packet.PA_sent_to_fc_status;
 
+		gcs().send_text(MAV_SEVERITY_CRITICAL,"hearbeat Recieved");
 		copter.rfm.sbc_alive=true;
 		copter.rfm.sbc_alive_control=true;
 
@@ -1554,6 +1549,8 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
 
 		copter.rfm.dt.start_time=packet.PA_start_time;
 		copter.rfm.dt.end_time=packet.PA_end_time;
+
+		gcs().send_text(MAV_SEVERITY_CRITICAL,"Time Recieved");
 
 		mavlink_msg_message_ack_send_buf(msg,chan,MAV_RESULT_ACCEPTED,MAVLINK_MSG_ID_DATE_TIME_BOUND);
 		break;

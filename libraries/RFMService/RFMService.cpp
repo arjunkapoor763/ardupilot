@@ -16,160 +16,169 @@ RFMService::RFMService()
 	return_point.y=0;
 	ret_lat=0;
 	ret_lng=0;
-	lcl_count=0;
+	lcl_count=1;
 	curr_time_gps=0;
 	geo_fence_return_set=false;
 	total_vertices=0;
 	sbc_alive=false;
 	sbc_alive_control=false;
 	sbc_ready_to_send_PA=false;
+
+	temp_lcl=false;
 }
 
 /*this is the handling of polygon geofence packet coming from SBC and saving it to eeprom.
 Also if GCS asks for a polygon geofence, this is where it sends back polygon geofence.*/
 void RFMService::handle_pa_geofence_points(GCS_MAVLINK &link, mavlink_message_t *msg, AC_Fence &fence)
 {
-		// exit immediately if null message
-		    if (msg == nullptr) {
-		        return;
-		    }
-		uint8_t result = MAV_RESULT_FAILED;
+	// exit immediately if null message
+	if (msg == nullptr) {
+		return;
+	}
+	uint8_t result = MAV_RESULT_FAILED;
 
-	    switch (msg->msgid)
-	    {
-	    case MAVLINK_MSG_ID_PA_GEOFENCE:
-	    {
-	    	/* sanity check!
-	    	 * SBC should be ready with heartbeat as 111,means ready to sent PA arteface!
-	    	 */
-	    	if(!sbc_ready_to_send_PA)
-	    	{
-	    		return;
-	    	}
-	    	mavlink_pa_geofence_t packet;
-	    	mavlink_msg_pa_geofence_decode(msg,&packet);
+	switch (msg->msgid)
+	{
+	//	    case MAVLINK_MSG_ID_FENCE_POINT:
+	case MAVLINK_MSG_ID_PA_GEOFENCE:
+	{
+		//	    	/* sanity check!
+		//	    	 * SBC should be ready with heartbeat as 111,means ready to sent PA arteface!
+		//	    	 */
+		//	    	if(!sbc_ready_to_send_PA)
+		//	    	{
+		//	    		return;
+		//	    	}
+		mavlink_pa_geofence_t packet;
+		mavlink_msg_pa_geofence_decode(msg,&packet);
 
-	    	/* sanity check!
-	    	 * id should never be 0, as 0 is assigned to
-	    	 * Geo-Fence return point, nothing should overwrite it.
-	    	 */
-	    	if(packet.waypoint_id == 0)
-	    	{
-	    		return;
-	    	}
+		/* sanity check!
+		 * id should never be 0, as 0 is assigned to
+		 * Geo-Fence return point, nothing should overwrite it.
+		 */
+		//	    	if(packet.waypoint_id == 0)
+		//	    	{
+		//	    		return;
+		//	    	}
 
-	    	if (!check_latlng(packet.Latitude,packet.Longitude))
-	    	{
-	    		link.send_text(MAV_SEVERITY_WARNING, "Invalid fence point, lat or lng too large");
+		if (!check_latlng(packet.Latitude,packet.Longitude))
+		{
+			gcs().send_text(MAV_SEVERITY_WARNING, "Invalid fence point, lat or lng too large");
 
-	    	}
-	    	else
-	    	{
-	    		Vector2l point;
+		}
+		else
+		{
+			Vector2l point;
 
-	    		static bool once =false;
+			static bool once =false;
 
-	    		//calculate the total vertices.
-	    		total_vertices=(packet.total_count-1);
+			//calculate the total vertices.
+			total_vertices=(packet.total_count-1);
+			fence_count=(packet.total_count+1);
 
-	    		//this is the setting of geo-fence return location as cendroid of polygon.
-	    		if(once == false && lcl_count<=total_vertices)
-	        	{
-	    			ret_lat = ret_lat + packet.Latitude;
-	    			ret_lng = ret_lng + packet.Longitude;
+			//this is the setting of geo-fence return location as cendroid of polygon.
+			if(once == false && lcl_count<=total_vertices)
+			{
+				ret_lat = ret_lat + packet.Latitude;
+				ret_lng = ret_lng + packet.Longitude;
 
-	        			if(lcl_count++ == total_vertices)
-	        			{
-	        				ret_lat=(ret_lat / total_vertices);
-	        				ret_lng=(ret_lng / total_vertices);
-	        				return_point.x=ret_lat*1.0e7f;
-	        				return_point.y=ret_lng*1.0e7f;
-	        				lcl_count=1;
-	        				total_vertices=0;
-	        				_poly_loader.save_point_to_eeprom(0, return_point);
-	        				return_point.x=0;
-	        				return_point.y=0;
-	        				ret_lat=0;
-	        				ret_lng=0;
-	        				once = true;
-	        				geo_fence_return_set=true; //currently not being used anywhere!
-	        			}
-	        			geo_fence_return_set=false;
-	        		}
+				if(lcl_count++ == total_vertices)
+				{
+					ret_lat=(ret_lat / total_vertices);
+					ret_lng=(ret_lng / total_vertices);
+					return_point.x=ret_lat*1.0e7f;
+					return_point.y=ret_lng*1.0e7f;
+					lcl_count=1;
+					total_vertices=0;
+					_poly_loader.save_point_to_eeprom(0, return_point);
+					return_point.x=0;
+					return_point.y=0;
+					ret_lat=0;
+					ret_lng=0;
+					once = true;
+					geo_fence_return_set=true; //currently not being used anywhere!
+				}
+				geo_fence_return_set=false;
+			}
+			if(packet.Latitude == 12.934158 && packet.Longitude ==77.609316)
+			{
+				gcs().send_text(MAV_SEVERITY_CRITICAL, "packet value ok");
+			}
 
-	    		point.x = packet.Latitude*1.0e7f;
-	    		point.y = packet.Longitude*1.0e7f;
+			point.x = packet.Latitude*1.0e7f;
+			point.y = packet.Longitude*1.0e7f;
 
-	    		if(packet.waypoint_id == packet.total_count)
-	    		{
-	    			once = false;
-	    		}
+			if(packet.waypoint_id == packet.total_count)
+			{
+				once = false;
+			}
 
-	    		if (!_poly_loader.save_point_to_eeprom(packet.waypoint_id, point))
-	    		{
-	    			link.send_text(MAV_SEVERITY_WARNING,"Failed to save polygon point, too many points?");
-	    		}
-	    		else
-	    		{
-	    		    // trigger reload of points //this is important to reload boundary from eeprom!
-	    		    fence._boundary_loaded = false;
-	    		}
+			if (!_poly_loader.save_point_to_eeprom(packet.waypoint_id, point))
+			{
+				gcs().send_text(MAV_SEVERITY_WARNING,"Failed to save polygon point, too many points?");
+			}
+			else
+			{
+				// trigger reload of points //this is important to reload boundary from eeprom!
+				fence._boundary_loaded = false;
+			}
 
-	    		fence_count=packet.total_count+1; //total count needs to be filled from here
+			gcs().send_text(MAV_SEVERITY_CRITICAL,"Points receiving");
 
-	    		//this is the ack/nak to every polygon point coming from sbc
-	    		result=MAV_RESULT_ACCEPTED;
-	    	}
-	    	//sending ack for received point from SBC
-	    	mavlink_msg_message_ack_send(link.get_chan(),result,MAVLINK_MSG_ID_PA_GEOFENCE);
-	    	break;
-	    }
+			//this is the ack/nak to every polygon point coming from sbc
+			result=MAV_RESULT_ACCEPTED;
+		}
+		//sending ack for received point from SBC
+		mavlink_msg_message_ack_send(link.get_chan(),result,MAVLINK_MSG_ID_PA_GEOFENCE);
+		break;
+	}
 
-	    // download geofence from GCS!
-	    // send a fence point to GCS
-	    case MAVLINK_MSG_ID_FENCE_FETCH_POINT:
-	    {
-	    	mavlink_fence_fetch_point_t packet;
-	    	mavlink_msg_fence_fetch_point_decode(msg, &packet);
-	    	// attempt to retrieve from eeprom
-	    	Vector2l point;
-	    	if (_poly_loader.load_point_from_eeprom(packet.idx, point))
-	    	{
-	    		//setting fence variables while downloading geofence to GCS!
-	    		fence._total.set_and_save(fence_count); //setting the total points to what is coming from sbce packet.
-	    		fence._enabled.set_and_save(1);
-	    		fence._enabled_fences.set_and_save(AC_FENCE_TYPE_CIRCLE_POLYGON);
-	    		fence._action.set_and_save(0);
-	    		mavlink_msg_fence_point_send_buf(msg, link.get_chan(), msg->sysid, msg->compid, packet.idx, fence._total, point.x*1.0e-7f, point.y*1.0e-7f);
+	// download geofence from GCS!
+	// send a fence point to GCS
+	case MAVLINK_MSG_ID_FENCE_FETCH_POINT:
+	{
 
-	    	}
-	    	else
-	    	{
-	    		link.send_text(MAV_SEVERITY_WARNING, "Bad fence point");
-	    	}
-	    	break;
-	    }
+		mavlink_fence_fetch_point_t packet;
+		mavlink_msg_fence_fetch_point_decode(msg, &packet);
+		// attempt to retrieve from eeprom
+		Vector2l point;
+		if (_poly_loader.load_point_from_eeprom(packet.idx, point))
+		{
+//			setting fence variables while downloading geofence to GCS!
+			fence._total.set_and_save(fence_count); //setting the total points to what is coming from sbce packet.
+			fence._enabled.set_and_save(1);
+			fence._enabled_fences.set_and_save(AC_FENCE_TYPE_CIRCLE_POLYGON);
+			fence._action.set_and_save(0);
+			mavlink_msg_fence_point_send_buf(msg, link.get_chan(), msg->sysid, msg->compid, packet.idx, fence._total, point.x*1.0e-7f, point.y*1.0e-7f);
+			gcs().send_text(MAV_SEVERITY_CRITICAL, "In fetch Point send point");
+		}
+		else
+		{
+			gcs().send_text(MAV_SEVERITY_WARNING, "Bad fence point");
+		}
+		break;
+	}
 
-	    default:
-	    	// do nothing
-	    	break;
-	    }
+	default:
+		// do nothing
+		break;
+	}
 
 }
 
 double RFMService::subtract(time_t time1, time_t time0)
 {
 	if (! TYPE_SIGNED (time_t))
-	    return time1 - time0;
-	  else
-	    {
-	      /* Optimize the common special cases where time_t
+		return time1 - time0;
+	else
+	{
+		/* Optimize the common special cases where time_t
 	         can be converted to uintmax_t without losing information.  */
-	      uintmax_t dt = (uintmax_t) time1 - (uintmax_t) time0;
-	      double delta = dt;
-	      if (UINTMAX_MAX / 2 < INTMAX_MAX)
-	        {
-	          /* This is a rare host where uintmax_t has padding bits, and possibly
+		uintmax_t dt = (uintmax_t) time1 - (uintmax_t) time0;
+		double delta = dt;
+		if (UINTMAX_MAX / 2 < INTMAX_MAX)
+		{
+			/* This is a rare host where uintmax_t has padding bits, and possibly
 	             information was lost when converting time_t to uintmax_t.
 	             Check for overflow by comparing dt/2 to (time1/2 - time0/2).
 	             Overflow occurred if they differ by more than a small slop.
@@ -190,38 +199,38 @@ double RFMService::subtract(time_t time1, time_t time0)
 	             In the above analysis, all the operators have their exact
 	             mathematical semantics, not C semantics.  However, dht - hdt +
 	             1 is unsigned in C, so it need not be compared to zero.  */
-	          uintmax_t hdt = dt / 2;
-	          time_t ht1 = time1 / 2;
-	          time_t ht0 = time0 / 2;
-	          time_t dht = ht1 - ht0;
-	          if (2 < dht - hdt + 1)
-	            {
-	              /* Repair delta overflow.
+			uintmax_t hdt = dt / 2;
+			time_t ht1 = time1 / 2;
+			time_t ht0 = time0 / 2;
+			time_t dht = ht1 - ht0;
+			if (2 < dht - hdt + 1)
+			{
+				/* Repair delta overflow.
 	                 The following expression contains a second rounding,
 	                 so the result may not be the closest to the true answer.
 	                 This problem occurs only with very large differences.
 	                 It's too painful to fix this portably.  */
-	              delta = dt + 2.0L * (UINTMAX_MAX - UINTMAX_MAX / 2);
-	            }
-	        }
-	      return delta;
-	    }
+				delta = dt + 2.0L * (UINTMAX_MAX - UINTMAX_MAX / 2);
+			}
+		}
+		return delta;
+	}
 }
 
 /* Return the difference between TIME1 and TIME0.  */
 double RFMService:: diff_time (time_t time1, time_t time0)
 {
-  /* Convert to double and then sub_tract if no double-rounding error could
+	/* Convert to double and then sub_tract if no double-rounding error could
      result.  */
-  if (TYPE_BITS (time_t) <= DBL_MANT_DIG
-      || (TYPE_FLOATING (time_t) && sizeof (time_t) < sizeof (long double)))
-    return (double) time1 - (double) time0;
-  /* Likewise for long double.  */
-  if (TYPE_BITS (time_t) <= LDBL_MANT_DIG || TYPE_FLOATING (time_t))
-    return (long double) time1 - (long double) time0;
-  /* Subtract the smaller integer from the larger, convert the difference to
+	if (TYPE_BITS (time_t) <= DBL_MANT_DIG
+			|| (TYPE_FLOATING (time_t) && sizeof (time_t) < sizeof (long double)))
+		return (double) time1 - (double) time0;
+	/* Likewise for long double.  */
+	if (TYPE_BITS (time_t) <= LDBL_MANT_DIG || TYPE_FLOATING (time_t))
+		return (long double) time1 - (long double) time0;
+	/* Subtract the smaller integer from the larger, convert the difference to
      double, and then negate if needed.  */
-  return time1 < time0 ? - subtract (time0, time1) : subtract (time1, time0);
+	return time1 < time0 ? - subtract (time0, time1) : subtract (time1, time0);
 }
 
 
@@ -262,8 +271,79 @@ bool RFMService::get_internal_id(char uin[40])
 		sysid[2]='m';
 		sysid[3]='a';
 		sysid[4]='t';
+		sysid[5]='o';
+		sysid[6]=' ';
+		sysid[7]=' ';
+		sysid[8]=' ';
 		strncpy(uin, sysid,40);
 		return true;
 	}
 	return false;
 }
+
+uint8_t RFMService::save_hardcode_gf(uint8_t id,float lat, float lng,AC_Fence &fence)
+{
+	gcs().send_text(MAV_SEVERITY_WARNING,"calculating fence");
+	static bool once=false;
+	Vector2l point;
+
+	if(once == false && lcl_count<=4)
+	{
+		ret_lat = ret_lat + lat;
+		ret_lng = ret_lng + lng;
+		gcs().send_text(MAV_SEVERITY_WARNING,"1 point added");
+		if(lcl_count++ == 4)
+		{
+			ret_lat=(ret_lat / 4);
+			ret_lng=(ret_lng / 4);
+			return_point.x=ret_lat*1.0e7f;
+			return_point.y=ret_lng*1.0e7f;
+			lcl_count=1;
+			//			total_vertices=0;
+			_poly_loader.save_point_to_eeprom(0, return_point);
+			return_point.x=0;
+			return_point.y=0;
+			ret_lat=0;
+			ret_lng=0;
+			once = true;
+			gcs().send_text(MAV_SEVERITY_WARNING,"save return point");
+//			geo_fence_return_set=true; //currently not being used anywhere!
+		}
+	}
+	else
+		geo_fence_return_set=true;
+
+		point.x = lat*1.0e7f;
+		point.y = lng*1.0e7f;
+		if (!_poly_loader.save_point_to_eeprom(id, point))
+		{
+			gcs().send_text(MAV_SEVERITY_WARNING,"Failed to save polygon point, too many points?");
+			return 0;
+		}
+		else
+		{
+			fence._boundary_loaded = false;
+			gcs().send_text(MAV_SEVERITY_WARNING,"point saved/boundary_loaded false");
+		}
+		if(geo_fence_return_set ==true)
+		{
+			gcs().send_text(MAV_SEVERITY_WARNING," fence_total 6");
+			fence._total=6;
+			return 2;
+		}
+
+
+	return 1;
+}
+//void DataFlash_Class::save_coming_points(float lat, float lng)
+//{
+//	struct log_temp pkt =
+//	{
+//			LOG_PACKET_HEADER_INIT(LOG_TEMP_MSG),
+//			lat		 : lat,
+//			lng   	 : lng,
+//
+//	};
+//	//writing a packet of time onto logs.
+//	WriteBlock(&pkt, sizeof(pkt));
+//}
