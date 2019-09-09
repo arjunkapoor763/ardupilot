@@ -203,6 +203,8 @@ void Copter::send_log_takeoff(mavlink_channel_t chan)
 
 	mavlink_msg_pa_takeoff_log_send(chan,takeoff_lat,takeoff_lng,takeoff_altitude,takeoff_timestamp);
 
+	gcs().send_text(MAV_SEVERITY_CRITICAL,"Takeoff Sent");
+
 	//reset land ack so that we send land again on this current takeoff
 	land_ack=true;
 }
@@ -250,6 +252,8 @@ void Copter::send_log_land(mavlink_channel_t chan)
 
 		//reset takeoff ack so that we send takeoff again on the next arm and takeoff
 		takeoff_ack=true;
+
+		gcs().send_text(MAV_SEVERITY_CRITICAL,"Land Sent");
 	}
 	else
 		return;
