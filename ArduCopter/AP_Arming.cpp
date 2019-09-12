@@ -631,7 +631,7 @@ bool AP_Arming_Copter::arm_checks(bool display_failure, AP_Arming::ArmingMethod 
 		{
 			if(display_failure)
 			{
-				check_failed(ARMING_CHECK_NPNT,display_failure,"Date/Time out of Bounds");
+				check_failed(ARMING_CHECK_NPNT,display_failure,"Date/Time out of PA Bounds");
 			}
 			return false;
 		}
@@ -643,7 +643,7 @@ bool AP_Arming_Copter::arm_checks(bool display_failure, AP_Arming::ArmingMethod 
 			{
 				if(display_failure)
 				{
-					check_failed(ARMING_CHECK_NPNT,display_failure,"Current location outside boundaries");
+					check_failed(ARMING_CHECK_NPNT,display_failure,"Current location outside PA boundaries");
 				}
 				return false;
 			}

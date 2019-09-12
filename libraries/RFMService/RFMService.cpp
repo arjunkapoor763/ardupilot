@@ -42,13 +42,13 @@ void RFMService::handle_pa_geofence_points(GCS_MAVLINK &link, mavlink_message_t 
 	//	    case MAVLINK_MSG_ID_FENCE_POINT:
 	case MAVLINK_MSG_ID_PA_GEOFENCE:
 	{
-		//	    	/* sanity check!
-		//	    	 * SBC should be ready with heartbeat as 111,means ready to sent PA arteface!
-		//	    	 */
-		//	    	if(!sbc_ready_to_send_PA)
-		//	    	{
-		//	    		return;
-		//	    	}
+		/* sanity check!
+		 * SBC should be ready with heartbeat as 111,means ready to sent PA arteface!
+		 */
+		if(!sbc_ready_to_send_PA)
+		{
+			return;
+		}
 		mavlink_pa_geofence_t packet;
 		mavlink_msg_pa_geofence_decode(msg,&packet);
 
@@ -56,10 +56,10 @@ void RFMService::handle_pa_geofence_points(GCS_MAVLINK &link, mavlink_message_t 
 		 * id should never be 0, as 0 is assigned to
 		 * Geo-Fence return point, nothing should overwrite it.
 		 */
-		//	    	if(packet.waypoint_id == 0)
-		//	    	{
-		//	    		return;
-		//	    	}
+		if(packet.waypoint_id == 0)
+		{
+			return;
+		}
 
 		if (!check_latlng(packet.Latitude,packet.Longitude))
 		{
@@ -144,7 +144,7 @@ void RFMService::handle_pa_geofence_points(GCS_MAVLINK &link, mavlink_message_t 
 		Vector2l point;
 		if (_poly_loader.load_point_from_eeprom(packet.idx, point))
 		{
-//			setting fence variables while downloading geofence to GCS!
+			//			setting fence variables while downloading geofence to GCS!
 			fence._total.set_and_save(fence_count); //setting the total points to what is coming from sbce packet.
 			fence._enabled.set_and_save(1);
 			fence._enabled_fences.set_and_save(AC_FENCE_TYPE_CIRCLE_POLYGON);
@@ -280,70 +280,3 @@ bool RFMService::get_internal_id(char uin[40])
 	}
 	return false;
 }
-
-uint8_t RFMService::save_hardcode_gf(uint8_t id,float lat, float lng,AC_Fence &fence)
-{
-	gcs().send_text(MAV_SEVERITY_WARNING,"calculating fence");
-	static bool once=false;
-	Vector2l point;
-
-	if(once == false && lcl_count<=4)
-	{
-		ret_lat = ret_lat + lat;
-		ret_lng = ret_lng + lng;
-		gcs().send_text(MAV_SEVERITY_WARNING,"1 point added");
-		if(lcl_count++ == 4)
-		{
-			ret_lat=(ret_lat / 4);
-			ret_lng=(ret_lng / 4);
-			return_point.x=ret_lat*1.0e7f;
-			return_point.y=ret_lng*1.0e7f;
-			lcl_count=1;
-			//			total_vertices=0;
-			_poly_loader.save_point_to_eeprom(0, return_point);
-			return_point.x=0;
-			return_point.y=0;
-			ret_lat=0;
-			ret_lng=0;
-			once = true;
-			gcs().send_text(MAV_SEVERITY_WARNING,"save return point");
-//			geo_fence_return_set=true; //currently not being used anywhere!
-		}
-	}
-	else
-		geo_fence_return_set=true;
-
-		point.x = lat*1.0e7f;
-		point.y = lng*1.0e7f;
-		if (!_poly_loader.save_point_to_eeprom(id, point))
-		{
-			gcs().send_text(MAV_SEVERITY_WARNING,"Failed to save polygon point, too many points?");
-			return 0;
-		}
-		else
-		{
-			fence._boundary_loaded = false;
-			gcs().send_text(MAV_SEVERITY_WARNING,"point saved/boundary_loaded false");
-		}
-		if(geo_fence_return_set ==true)
-		{
-			gcs().send_text(MAV_SEVERITY_WARNING," fence_total 6");
-			fence._total=6;
-			return 2;
-		}
-
-
-	return 1;
-}
-//void DataFlash_Class::save_coming_points(float lat, float lng)
-//{
-//	struct log_temp pkt =
-//	{
-//			LOG_PACKET_HEADER_INIT(LOG_TEMP_MSG),
-//			lat		 : lat,
-//			lng   	 : lng,
-//
-//	};
-//	//writing a packet of time onto logs.
-//	WriteBlock(&pkt, sizeof(pkt));
-//}

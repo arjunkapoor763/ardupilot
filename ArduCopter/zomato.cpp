@@ -14,38 +14,6 @@
  */
 void Copter::rfm_NPNT_restrictions()
 {
-	/***************TEMPORARY*****************/
-//	static uint8_t lclc_count=0;
-//	if(lclc_count++>200)
-//	{
-//		static bool temp_lcl=false;
-//		static uint8_t c=0;
-//		if(!temp_lcl)
-//		{
-//			gcs().send_text(MAV_SEVERITY_WARNING,"call+");
-//			c=rfm.save_hardcode_gf(1,12.934158,77.609316,fence);
-//			c=rfm.save_hardcode_gf(2,12.934796,77.609852,fence);
-//			c=rfm.save_hardcode_gf(3,12.934183,77.610646,fence);
-//			c=rfm.save_hardcode_gf(4,12.933551,77.610100,fence);
-//			c=rfm.save_hardcode_gf(5,12.934158,77.609316,fence);
-//
-//			if(c==2)
-//			{
-//				temp_lcl =true;
-//			}
-//
-//		}
-//		if(g2.land_alt_low == 10)
-//		{
-//			lclc_count=0;
-//			temp_lcl=false;
-//			c=0;
-//		}
-//	}
-//	rfm.sbc_alive=true; //temp remove it
-//	rfm.sbc_alive_control=true;
-
-
 	/*****************************Time Verification*****************************/
 
 	//local counter used for controlling the sbc_alive variable values.

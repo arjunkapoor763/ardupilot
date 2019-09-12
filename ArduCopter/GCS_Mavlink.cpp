@@ -1514,7 +1514,6 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
 		copter.rfm.sbc_hb.PA_verification_status=packet.PA_verification_status;
 		copter.rfm.sbc_hb.PA_sent_to_fc_status=packet.PA_sent_to_fc_status;
 
-//		gcs().send_text(MAV_SEVERITY_CRITICAL,"hearbeat Recieved");
 		copter.rfm.sbc_alive=true;
 		copter.rfm.sbc_alive_control=true;
 
@@ -1544,6 +1543,7 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
 		 */
 		if(packet.PA_start_time == 0 || packet.PA_end_time == 0)
 		{
+			gcs().send_text(MAV_SEVERITY_CRITICAL,"Invalid Time Recieved");
 			return;
 		}
 
