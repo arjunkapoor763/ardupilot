@@ -24,7 +24,6 @@ RFMService::RFMService()
 	sbc_alive_control=false;
 	sbc_ready_to_send_PA=false;
 
-	temp_lcl=false;
 }
 
 /*this is the handling of polygon geofence packet coming from SBC and saving it to eeprom.
