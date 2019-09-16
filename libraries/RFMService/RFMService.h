@@ -63,7 +63,7 @@ public:
 	//for difference between two times in UTC
 	static double subtract(time_t time1, time_t time0);
 	double diff_time(time_t time1, time_t time0);
-	bool get_datetime_restriction();
+	bool get_datetime_restriction(AP_GPS &Gps);
 	bool get_internal_id(char uin[40]);
 
 	void handle_pa_geofence_points(GCS_MAVLINK &link, mavlink_message_t *msg, AC_Fence &fence);

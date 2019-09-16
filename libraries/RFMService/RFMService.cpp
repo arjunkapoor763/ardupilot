@@ -235,13 +235,15 @@ double RFMService:: diff_time (time_t time1, time_t time0)
 
 /* This is a boolean function that returns true if current time lies in bound of start and end time|else false.
  * Time is needed in Epoch UTC format for comaparison.*/
-bool RFMService::get_datetime_restriction()
+bool RFMService::get_datetime_restriction(AP_GPS &Gps)
 {
 	bool date_time_verified=false;
 
 	//getting the system clock in milliseconds converting it seconds,epcoh UTC
 	static uint32_t currdtime_s;
-	currdtime_s=(hal.util->get_hw_rtc()/1000);
+//	currdtime_s=(hal.util->get_hw_rtc()/1000);
+	currdtime_s=Gps.time_epoch_usec();
+	currdtime_s=currdtime_s / 1000000U;
 
 	//this variable is for the rest of the classes using it as logging etc.
 	curr_time_gps=currdtime_s;

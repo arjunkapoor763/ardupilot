@@ -332,7 +332,7 @@ bool AP_Arming_Copter::rc_calibration_checks(bool display_failure)
 	};
 
 	copter.ap.pre_arm_rc_check = rc_checks_copter_sub(display_failure, channels)
-        		& AP_Arming::rc_calibration_checks(display_failure);
+        				& AP_Arming::rc_calibration_checks(display_failure);
 
 	return copter.ap.pre_arm_rc_check;
 }
@@ -635,36 +635,34 @@ bool AP_Arming_Copter::arm_checks(bool display_failure, AP_Arming::ArmingMethod 
 			}
 			return false;
 		}
-		if(!copter.res_time_veri)
+
+		static uint8_t geof_arm=0;
+		geof_arm=copter.fence.get_breaches();
+		if(geof_arm & AC_FENCE_TYPE_POLYGON)
 		{
-			static uint8_t geof_arm=0;
-			geof_arm=copter.fence.get_breaches();
-			if(geof_arm & AC_FENCE_TYPE_POLYGON)
+			if(display_failure)
 			{
-				if(display_failure)
-				{
-					check_failed(ARMING_CHECK_NPNT,display_failure,"Current location outside PA boundaries");
-				}
-				return false;
+				check_failed(ARMING_CHECK_NPNT,display_failure,"Current location outside PA boundaries");
 			}
+			return false;
+
 		}
+
+
+		// check if safety switch has been pushed
+		if (hal.util->safety_switch_state() == AP_HAL::Util::SAFETY_DISARMED) {
+			check_failed(ARMING_CHECK_NONE, display_failure, "Safety Switch");
+			return false;
+		}
+
+		// superclass method should always be the last thing called; it
+		// has side-effects which would need to be cleaned up if one of
+		// our arm checks failed
+		return AP_Arming::arm_checks(method);
 	}
 
-
-	// check if safety switch has been pushed
-	if (hal.util->safety_switch_state() == AP_HAL::Util::SAFETY_DISARMED) {
-		check_failed(ARMING_CHECK_NONE, display_failure, "Safety Switch");
-		return false;
+	void AP_Arming_Copter::set_pre_arm_check(bool b)
+	{
+		copter.ap.pre_arm_check = b;
+		AP_Notify::flags.pre_arm_check = b;
 	}
-
-	// superclass method should always be the last thing called; it
-	// has side-effects which would need to be cleaned up if one of
-	// our arm checks failed
-	return AP_Arming::arm_checks(method);
-}
-
-void AP_Arming_Copter::set_pre_arm_check(bool b)
-{
-	copter.ap.pre_arm_check = b;
-	AP_Notify::flags.pre_arm_check = b;
-}

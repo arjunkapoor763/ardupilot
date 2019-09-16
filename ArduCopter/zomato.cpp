@@ -34,10 +34,10 @@ void Copter::rfm_NPNT_restrictions()
 	}
 
 	//this ensures that nothing is to be done until artifact is not received.
-	if(!rfm.sbc_ready_to_send_PA)
-	{
-		return;
-	}
+//	if(!rfm.sbc_ready_to_send_PA)
+//	{
+//		return;
+//	}
 
 	static uint8_t temp = 0;
 	//this is the function call to check the date/time restrictions.
@@ -45,7 +45,7 @@ void Copter::rfm_NPNT_restrictions()
 	if(temp++ > 3)
 	{
 		temp = 0;
-		res_time_veri=rfm.get_datetime_restriction();
+		res_time_veri=rfm.get_datetime_restriction(copter.gps);
 	}
 
 	//this is the packet which is logging date time required fields.
