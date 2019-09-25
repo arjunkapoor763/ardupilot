@@ -34,10 +34,10 @@ void Copter::rfm_NPNT_restrictions()
 	}
 
 	//this ensures that nothing is to be done until artifact is not received.
-//	if(!rfm.sbc_ready_to_send_PA)
-//	{
-//		return;
-//	}
+	//	if(!rfm.sbc_ready_to_send_PA)
+	//	{
+	//		return;
+	//	}
 
 	static uint8_t temp = 0;
 	//this is the function call to check the date/time restrictions.
@@ -45,7 +45,7 @@ void Copter::rfm_NPNT_restrictions()
 	if(temp++ > 3)
 	{
 		temp = 0;
-		res_time_veri=rfm.get_datetime_restriction(copter.gps);
+		res_time_veri=rfm.get_datetime_restriction();
 	}
 
 	//this is the packet which is logging date time required fields.
@@ -99,7 +99,7 @@ void Copter::send_log_geofence_breach(mavlink_channel_t chan)
 {
 	static int8_t geo_breach = -1;
 	static bool breach_started = false;
-	static uint32_t start_breach_time=0,end_breach_time = 0;
+	static uint64_t start_breach_time=0,end_breach_time = 0;
 	int32_t breach_lat = 0,breach_lng = 0;
 	float geo_fence_breach_alt=0;
 
@@ -116,7 +116,9 @@ void Copter::send_log_geofence_breach(mavlink_channel_t chan)
 		{
 			if(breach_started == false)
 			{
-				start_breach_time=(hal.util->get_hw_rtc()/1000);
+				AP::rtc().get_utc_usec(start_breach_time);
+				start_breach_time=start_breach_time / 1000000U;
+				start_breach_time=start_breach_time+19800; //converting to ist
 				breach_started = true;
 			}
 			breach_lat=current_loc.lat;
@@ -129,7 +131,10 @@ void Copter::send_log_geofence_breach(mavlink_channel_t chan)
 		{
 			if(breach_started == true)
 			{
-				end_breach_time=(hal.util->get_hw_rtc()/1000);
+				AP::rtc().get_utc_usec(end_breach_time);
+				end_breach_time=end_breach_time / 1000000U;
+				end_breach_time=end_breach_time+19800; //converting to ist
+
 				breach_started = false;
 				breach_lat=current_loc.lat;
 				breach_lng=current_loc.lng;
@@ -158,7 +163,7 @@ void Copter::send_log_takeoff(mavlink_channel_t chan)
 		return;
 	}
 	int32_t takeoff_lat,takeoff_lng;
-	uint32_t takeoff_timestamp;
+	uint64_t takeoff_timestamp;
 	float takeoff_altitude;
 
 	//we need to get clarification on this whether to use EKF origin or home(where it arms) as home location
@@ -167,7 +172,11 @@ void Copter::send_log_takeoff(mavlink_channel_t chan)
 
 	//the home alt is in cm,converting it to m
 	takeoff_altitude=(ahrs.get_home().alt/100.0f);
-	takeoff_timestamp=(hal.util->get_hw_rtc()/1000);
+
+	//get timestamp
+	AP::rtc().get_utc_usec(takeoff_timestamp);
+	takeoff_timestamp = takeoff_timestamp / 100000U;
+	takeoff_timestamp=takeoff_timestamp+19800;//converting to ist
 
 	mavlink_msg_pa_takeoff_log_send(chan,takeoff_lat,takeoff_lng,takeoff_altitude,takeoff_timestamp);
 
@@ -205,7 +214,7 @@ void Copter::send_log_land(mavlink_channel_t chan)
 	if(!motors->armed() && temp)
 	{
 		int32_t land_lat,land_lng;
-		uint32_t land_timestamp;
+		uint64_t land_timestamp;
 		float land_altitude;
 		const struct Location &loc = gps.location();
 
@@ -214,7 +223,11 @@ void Copter::send_log_land(mavlink_channel_t chan)
 
 		//converting cm it to m
 		land_altitude=(loc.alt/100.0f);
-		land_timestamp=(hal.util->get_hw_rtc()/1000);
+
+		//get time
+		AP::rtc().get_utc_usec(land_timestamp);
+		land_timestamp= land_timestamp / 1000000U;
+		land_timestamp=land_timestamp+19800;
 
 		mavlink_msg_pa_land_log_send(chan,land_lat,land_lng,land_altitude,land_timestamp);
 
@@ -231,7 +244,7 @@ void Copter::send_time_breach(mavlink_channel_t chan)
 {
 	if(!res_time_veri)
 	{
-		static uint32_t start_time_breach=0,end_breach_time = 0;
+		static uint64_t start_time_breach=0,end_breach_time = 0;
 		static uint8_t timeCount = 0;
 		static bool armed_once=false;
 
@@ -242,7 +255,11 @@ void Copter::send_time_breach(mavlink_channel_t chan)
 			{
 				armed_once=true;
 				//new packet is being sent from send_time_breach to GCS telling the date/time is breached.
-				start_time_breach=(hal.util->get_hw_rtc()/1000);
+
+				//get time
+				AP::rtc().get_utc_usec(start_time_breach);
+				start_time_breach=start_time_breach / 1000000U;
+				start_time_breach=start_time_breach+19800;
 				end_breach_time=0;
 				mavlink_msg_rfm_status_send(chan,start_time_breach,end_breach_time);
 				timeCount=0;
@@ -255,7 +272,9 @@ void Copter::send_time_breach(mavlink_channel_t chan)
 				if(timeCount++ >=10) //for sending @1hz as its MAVLink stream is being set at @10hz already.
 				{
 					start_time_breach=0;
-					end_breach_time=(hal.util->get_hw_rtc()/1000);
+					AP::rtc().get_utc_usec(end_breach_time);
+					end_breach_time=end_breach_time / 1000000U;
+					end_breach_time=end_breach_time+19800;
 					mavlink_msg_rfm_status_send(chan,start_time_breach,end_breach_time);
 					timeCount=0;
 					armed_once=false;
